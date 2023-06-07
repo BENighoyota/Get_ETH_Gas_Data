@@ -1,0 +1,29 @@
+import requests
+import pandas as pd
+import time  
+import ast
+
+from etherscan import Etherscan
+eth = Etherscan("UMB2VYU98VD2CP5CWWUNVHANEE8TGG3BJJ") # key in quotation marks
+
+dapper_data = pd.read_csv("tx_hash.csv")
+
+parameters= ['blockHash_pre_processing_tx','blockNumber_pre_processing_tx','from_pre_processing_tx','gas_pre_processing_tx','gasPrice_pre_processing_tx','maxFeePerGas_pre_processing_tx','maxPriorityFeePerGas_pre_processing_tx','hash_pre_processing_tx','to_pre_processing_tx', 'transactionIndex_pre_processing_tx','value_pre_processing_tx', 'type_pre_processing_tx','blockHash','blockNumber','contractAddress','cumulativeGasUsed','effectiveGasPrice','from','gasUsed', 'status','to', 'transactionHash']
+
+ethscan_data=pd.DataFrame(columns=parameters)
+count=0
+for index, row in dapper_data.iterrows():
+    tx_hash = row['eth_tx_hash']
+    if isinstance(tx_hash, str):
+        get_tx_details=eth.get_proxy_transaction_by_hash(tx_hash)
+        print(get_tx_details)
+        get_tx_reciept=eth.get_proxy_transaction_receipt(tx_hash)
+        new_row = pd.DataFrame([get_tx_details['blockHash'],get_tx_details['blockNumber'],get_tx_details['from'],ast.literal_eval(get_tx_details['gas']),ast.literal_eval(get_tx_details['gasPrice']),ast.literal_eval(get_tx_details['maxFeePerGas']), ast.literal_eval(get_tx_details['maxPriorityFeePerGas']),get_tx_details['hash'],get_tx_details['to'], get_tx_details['transactionIndex'],ast.literal_eval(get_tx_details['value']),get_tx_details['type'],get_tx_reciept['blockHash'],get_tx_reciept['blockNumber'],get_tx_reciept['contractAddress'],ast.literal_eval(get_tx_reciept['cumulativeGasUsed']),ast.literal_eval(get_tx_reciept['effectiveGasPrice']),get_tx_reciept['from'],ast.literal_eval(get_tx_reciept['gasUsed']),get_tx_reciept['status'],get_tx_reciept['to'], get_tx_reciept['transactionHash']],  index=parameters).T
+        ethscan_data= pd.concat((ethscan_data, new_row))
+        time.sleep(1)
+        print(tx_hash)
+    else:
+        print(count+1)
+ethscan_data.to_csv("eth_chain_data232.csv")
+
+
